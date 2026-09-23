@@ -1,36 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide Google Translate top bar and popups */
+.goog-te-banner-frame { display: none !important; }
+.skiptranslate > iframe.goog-te-banner-frame { display: none !important; }
+.goog-tooltip { display: none !important; }
+.goog-tooltip:hover { display: none !important; }
+.goog-text-highlight {
+  background-color: transparent !important;
+  border: none !important; 
+  box-shadow: none !important;
+}
+body { top: 0 !important; }
+
 :root {
-  --primary: #059669;
-  --primary-hover: #047857;
-  --primary-light: #ecfdf5;
-  --primary-border: #a7f3d0;
+  /* Material Blue (Indigo-600 base) */
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-light: #EFF6FF;
+  --primary-border: #BFDBFE;
   
-  --secondary: #0f172a;
-  --accent: #d97706;
-  --accent-light: #fffbeb;
+  --secondary: #111827;
+  --accent: #F59E0B;
+  --accent-light: #FEF3C7;
   
-  --bg-main: #f8fafc;
-  --bg-surface: #ffffff;
-  --bg-subtle: #f1f5f9;
+  --bg-main: #F9FAFB;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F3F4F6;
   
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-main: #111827;
+  --text-muted: #4B5563;
+  --text-light: #9CA3AF;
   
-  --border-light: #e2e8f0;
-  --border-focus: #10b981;
+  --border-light: #E5E7EB;
+  --border-focus: #3B82F6;
   
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+  /* Stricter Material Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
   
+  /* Sharper, professional shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
   
+  /* Unified Typography */
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
+  --font-heading: 'Inter', system-ui, sans-serif;
 }
 
 * {
@@ -104,13 +124,13 @@ input, select, textarea {
 .brand-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: var(--primary);
   color: #fff;
   border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .brand-title {
@@ -253,11 +273,19 @@ input, select, textarea {
   display: flex;
   align-items: center;
   gap: 2rem;
-  white-space: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
+  padding-right: 2rem; /* Matches the gap to ensure seamless loop */
+  width: max-content;
+  animation: marquee 30s linear infinite;
+  will-change: transform;
 }
-.ticker-scroll::-webkit-scrollbar { display: none; }
+.ticker-scroll:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
 
 .ticker-item {
   display: flex;
@@ -281,12 +309,12 @@ input, select, textarea {
 
 /* Marketplace Section */
 .hero-banner {
-  background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+  background: var(--primary);
   color: #ffffff;
   border-radius: var(--radius-lg);
   padding: 2.25rem 2rem;
   margin-bottom: 2rem;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
 }
@@ -795,4 +823,34 @@ input, select, textarea {
   .hero-title {
     font-size: 1.6rem;
   }
+}
+
+/* --- Google Translate Overrides --- */
+.goog-te-banner-frame.skiptranslate {
+  display: none !important;
+}
+body {
+  top: 0px !important;
+}
+.goog-te-gadget {
+  font-family: var(--font-body) !important;
+  color: transparent !important;
+  font-size: 0;
+}
+.goog-te-gadget .goog-te-combo {
+  font-family: var(--font-body) !important;
+  font-size: 0.85rem !important;
+  color: var(--text-main) !important;
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.35rem 0.6rem !important;
+  outline: none !important;
+  margin: 0 !important;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+.goog-te-gadget .goog-te-combo:focus, .goog-te-gadget .goog-te-combo:hover {
+  border-color: var(--primary) !important;
 }

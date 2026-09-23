@@ -2,7 +2,7 @@ export type UserRole = 'farmer' | 'buyer';
 
 export type QualityGrade = 'Grade A (Export)' | 'Grade A' | 'Grade B' | 'Organic Certified';
 
-export type OrderStatus = 'Pending Approval' | 'Confirmed' | 'Dispatched' | 'In Transit' | 'Delivered';
+export type OrderStatus = 'Pending Approval' | 'Confirmed' | 'Dispatched' | 'In Logistics Transit' | 'Delivered';
 
 export interface Location {
   village: string;
@@ -100,7 +100,7 @@ export interface Order {
   truckDetails: string;
   estimatedDelivery: string;
   escrowStatus: 'Held in Escrow' | 'Released to Farmer';
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface ToastMessage {

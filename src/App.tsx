@@ -1,31 +1,38 @@
 import React, { useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { UserRole, ProduceListing, QuoteRequest, Order, OrderStatus, ToastMessage } from './types';
-import {
-  CURRENT_FARMER,
-  MOCK_MANDI_RATES,
-  INITIAL_PRODUCE_LISTINGS,
-  INITIAL_QUOTES,
-  INITIAL_ORDERS,
-} from './data/mockData';
+import { CURRENT_FARMER, MOCK_MANDI_RATES } from './data/mockData';
+import { db } from './services/db';
 import { Navbar } from './components/Navbar';
 import { MandiTicker } from './components/MandiTicker';
 import { BuyerMarketplace } from './components/BuyerMarketplace';
 import { FarmerDashboard } from './components/FarmerDashboard';
+import { Chatbot } from './components/Chatbot';
 import { AddProduceModal } from './components/AddProduceModal';
 import { QuoteModal } from './components/QuoteModal';
 import { CheckoutModal } from './components/CheckoutModal';
 import { OrdersView } from './components/OrdersView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { NotificationToast } from './components/NotificationToast';
+import { useAuth } from './context/AuthContext';
+import { Home } from './pages/Home';
+import { Login } from './pages/Login';
+import { Signup } from './pages/Signup';
 
 export function App() {
-  const [role, setRole] = useState<UserRole>('buyer');
-  const [activeTab, setActiveTab] = useState<'marketplace' | 'orders' | 'analytics'>('marketplace');
+  const { user, isLoggedIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isPublicRoute = ['/', '/login', '/signup'].includes(location.pathname);
 
   // Unified Reactive Application State
-  const [listings, setListings] = useState<ProduceListing[]>(INITIAL_PRODUCE_LISTINGS);
-  const [quotes, setQuotes] = useState<QuoteRequest[]>(INITIAL_QUOTES);
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
+  const [listings, setListings] = useState<ProduceListing[]>(db.getListings());
+  const [quotes, setQuotes] = useState<QuoteRequest[]>(db.getQuotes());
+  const [orders, setOrders] = useState<Order[]>(db.getOrders());
+  
+  React.useEffect(() => { db.saveListings(listings); }, [listings]);
+  React.useEffect(() => { db.saveQuotes(quotes); }, [quotes]);
+  React.useEffect(() => { db.saveOrders(orders); }, [orders]);
   const [cart, setCart] = useState<ProduceListing[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
@@ -115,7 +122,7 @@ export function App() {
   const handlePlaceOrder = (newOrders: Order[]) => {
     setOrders([...newOrders, ...orders]);
     setCart([]);
-    setActiveTab('orders');
+    navigate('/orders');
     newOrders.forEach((o) => {
       addToast(
         '📦 New Order Placed & Escrow Held!',
@@ -169,71 +176,100 @@ export function App() {
       {/* Live Floating Toast Notifications */}
       <NotificationToast toasts={toasts} onDismiss={handleDismissToast} />
 
-      {/* Live Mandi Rate Ticker */}
-      <MandiTicker rates={MOCK_MANDI_RATES} />
-
-      {/* Main Navbar with Role Session Indicator */}
-      <Navbar
-        role={role}
-        setRole={setRole}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        cartCount={cart.length}
-        onOpenCart={() => setIsCheckoutModalOpen(true)}
-        notificationCount={toasts.length}
-      />
+      {/* Global Elements hidden on public routes */}
+      {!isPublicRoute && (
+        <>
+          <MandiTicker rates={MOCK_MANDI_RATES} />
+          <Navbar
+            cartCount={cart.length}
+            onOpenCart={() => setIsCheckoutModalOpen(true)}
+            notificationCount={toasts.length}
+          />
+        </>
+      )}
 
       {/* Main Content Area */}
-      <main className="main-content">
-        {activeTab === 'marketplace' &&
-          (role === 'buyer' ? (
-            <BuyerMarketplace
-              listings={listings}
-              onAddToCart={handleAddToCart}
-              onRequestQuote={handleOpenQuoteModal}
-            />
-          ) : (
-            <FarmerDashboard
-              farmer={CURRENT_FARMER}
-              listings={listings}
-              quotes={quotes}
-              orders={orders}
-              onOpenAddModal={() => setIsAddModalOpen(true)}
-              onAcceptQuote={handleAcceptQuote}
-              onRejectQuote={handleRejectQuote}
-              onDeleteListing={handleDeleteListing}
-              onUpdateOrderStatus={handleUpdateOrderStatus}
-            />
-          ))}
+      <main className={isPublicRoute ? '' : 'main-content'}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          
+          <Route 
+            path="/marketplace" 
+            element={
+              isLoggedIn ? (
+              <BuyerMarketplace
+                listings={listings}
+                onAddToCart={handleAddToCart}
+                onRequestQuote={handleOpenQuoteModal}
+              />
+              ) : <Navigate to="/login" replace />
+            } 
+          />
+          
+          <Route 
+            path="/farmer/dashboard" 
+            element={
+              isLoggedIn && user?.role === 'farmer' ? (
+              <FarmerDashboard
+                farmer={CURRENT_FARMER}
+                listings={listings}
+                quotes={quotes}
+                orders={orders}
+                onOpenAddModal={() => setIsAddModalOpen(true)}
+                onAcceptQuote={handleAcceptQuote}
+                onRejectQuote={handleRejectQuote}
+                onDeleteListing={handleDeleteListing}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
+              />
+              ) : <Navigate to="/login" replace />
+            } 
+          />
 
-        {activeTab === 'orders' && (
-          <OrdersView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} />
-        )}
+          <Route 
+            path="/orders" 
+            element={isLoggedIn ? <OrdersView orders={orders} onUpdateOrderStatus={handleUpdateOrderStatus} /> : <Navigate to="/login" replace />} 
+          />
 
-        {activeTab === 'analytics' && <AnalyticsView rates={MOCK_MANDI_RATES} />}
+          <Route 
+            path="/analytics" 
+            element={isLoggedIn ? <AnalyticsView rates={MOCK_MANDI_RATES} /> : <Navigate to="/login" replace />} 
+          />
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </main>
 
       {/* Modals */}
-      <AddProduceModal
-        farmer={CURRENT_FARMER}
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAddListing={handleAddListing}
-      />
+      {!isPublicRoute && (
+        <>
+          <AddProduceModal
+            farmer={CURRENT_FARMER}
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onAddListing={handleAddListing}
+          />
 
-      <QuoteModal
-        listing={quoteTarget}
-        isOpen={isQuoteModalOpen}
-        onClose={() => setIsQuoteModalOpen(false)}
-        onSubmitQuote={handleSubmitQuote}
-      />
+          <QuoteModal
+            listing={quoteTarget}
+            isOpen={isQuoteModalOpen}
+            onClose={() => setIsQuoteModalOpen(false)}
+            onSubmitQuote={handleSubmitQuote}
+          />
 
-      <CheckoutModal
-        cart={cart}
-        isOpen={isCheckoutModalOpen}
-        onClose={() => setIsCheckoutModalOpen(false)}
-        onPlaceOrder={handlePlaceOrder}
-      />
+          <CheckoutModal
+            cart={cart}
+            isOpen={isCheckoutModalOpen}
+            onClose={() => setIsCheckoutModalOpen(false)}
+            onPlaceOrder={handlePlaceOrder}
+          />
+          
+          {/* AI Assistant Chatbot */}
+          <Chatbot />
+        </>
+      )}
     </div>
   );
 }

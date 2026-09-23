@@ -22,8 +22,8 @@ export const OrdersView: React.FC<OrdersViewProps> = ({ orders, onUpdateOrderSta
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {orders.map((ord) => {
           const isPending = ord.status === 'Pending Approval';
-          const isConfirmed = ord.status === 'Confirmed' || ord.status === 'Dispatched' || ord.status === 'In Transit' || ord.status === 'Delivered';
-          const isInTransit = ord.status === 'Dispatched' || ord.status === 'In Transit' || ord.status === 'Delivered';
+          const isConfirmed = ord.status === 'Confirmed' || ord.status === 'Dispatched' || ord.status === 'In Logistics Transit' || ord.status === 'Delivered';
+          const isInTransit = ord.status === 'Dispatched' || ord.status === 'In Logistics Transit' || ord.status === 'Delivered';
           const isDelivered = ord.status === 'Delivered';
 
           return (

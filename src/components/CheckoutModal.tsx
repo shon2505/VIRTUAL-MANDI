@@ -30,6 +30,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       orderNumber: `VM-2026-${Math.floor(1000 + Math.random() * 9000)}`,
       cropTitle: item.title,
       farmerName: item.farmer.name,
+      farmerId: item.farmer.id,
       buyerCompany: 'Metro Wholesale Traders Pvt Ltd',
       quantity: item.minOrderQuantity,
       totalAmount: item.pricePerQuintal * item.minOrderQuantity + (logisticsCost / cart.length),
